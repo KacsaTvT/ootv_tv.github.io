@@ -7,25 +7,19 @@
         body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 30px; overflow: hidden; }
         h2 { color: #38bdf8; margin-top: 0; font-size: 24pt; border: none; padding: 0; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* ÚJ: Kitűzött Üzenet Stílusa (TV-re optimalizálva) */
-        #pinned-banner {
-            background: linear-gradient(135deg, #4c1d95 0%, #312e81 100%);
-            border-left: 10px solid #a855f7;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-            margin-bottom: 30px;
-            display: none; /* Alapból rejtve van */
-        }
+        #pinned-banner { background: linear-gradient(135deg, #4c1d95 0%, #312e81 100%); border-left: 10px solid #a855f7; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); margin-bottom: 30px; display: none; }
         .pinned-header { color: #d8b4fe; font-weight: bold; font-size: 16pt; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
         .pinned-text { color: #ffffff; font-size: 32pt; font-weight: bold; line-height: 1.3; }
 
-        /* Normál üzenetek */
         #wallboard { display: flex; flex-direction: column; gap: 20px; max-height: 85vh; overflow: hidden; }
         .message-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 8px solid #38bdf8; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Címzett megjelenítésének formázása */
         .sender { font-weight: bold; color: #f43f5e; font-size: 16pt; margin-bottom: 8px; }
+        .sender-highlight { color: #38bdf8; } /* A címzett neve kékkel lesz kiemelve, hogy jól mutasson */
+        
         .time { font-size: 11pt; color: #94a3b8; font-weight: normal; float: right; }
-        .content { font-size: 22pt; line-height: 1.4; color: #e2e8f0; }
+        .content { font-size: 22pt; line-height: 1.4; color: #e2e8f0; font-style: italic; }
         
         @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
     </style>
@@ -34,14 +28,13 @@
     <h2>Élő üzenőfal <span style="color:#f43f5e;">●</span></h2>
     
     <div id="pinned-banner"></div>
-
     <div id="wallboard"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // IDE MÁSOLD BE A FIREBASE KULCSAIDAT!
+        // IDE MÁSOLD BE A SAJÁT KULCSAIDAT!
         const firebaseConfig = { 
             apiKey: "AIzaSyDS6UEeb9o5XT7hCBOHMw-nADQkQrEXRIk", 
             authDomain: "ootv-9ad58.firebaseapp.com", 
@@ -50,7 +43,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Csak a jóváhagyott üzeneteket kérjük le
         const q = query(collection(db, "messages"), where("approved", "==", true));
         
         onSnapshot(q, (snapshot) => {
@@ -60,33 +52,36 @@
             
             let pinnedData = null;
             
-            // Üzenetek szétválogatása
             snapshot.forEach((doc) => {
-                // Ha ez az Admin üzenet, akkor elmentjük külön, és nem rakjuk be a normál listába
                 if(doc.id === "PINNED_MESSAGE") {
                     pinnedData = doc.data();
                     return; 
                 }
 
-                // Normál üzenet kirajzolása
                 const data = doc.data();
+                
+                // --- ÚJ: Szöveg formázása a Címzett alapján ---
+                let senderHTML = data.name;
+                if (data.recipient && data.recipient.trim() !== "") {
+                    senderHTML = `${data.name} üzenetet küldött neki: <span class="sender-highlight">${data.recipient}</span>`;
+                }
+
                 wallboard.innerHTML += `
                     <div class="message-card">
-                        <div class="sender">${data.name} <span class="time">${data.date}</span></div>
+                        <div class="sender">${senderHTML} <span class="time">${data.date}</span></div>
                         <div class="content">"${data.text}"</div>
                     </div>
                 `;
             });
 
-            // Kitűzött üzenet kezelése
             if (pinnedData) {
-                pinnedBanner.style.display = "block"; // Megjelenítjük a dobozt
+                pinnedBanner.style.display = "block";
                 pinnedBanner.innerHTML = `
                     <div class="pinned-header">📢 Fontos Közlemény</div>
                     <div class="pinned-text">${pinnedData.text}</div>
                 `;
             } else {
-                pinnedBanner.style.display = "none"; // Elrejtjük, ha épp nincs kitűzve semmi
+                pinnedBanner.style.display = "none";
                 pinnedBanner.innerHTML = "";
             }
         });
