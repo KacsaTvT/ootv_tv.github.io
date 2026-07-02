@@ -32,8 +32,7 @@ overflow: hidden; }
  <div id="wallboard"></div>
  <script type="module">
  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
- import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; from
-"https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+ import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
  const firebaseConfig = {
  apiKey: "AIzaSyDS6UEeb9o5XT7hCBOHMw-nADQkQrEXRIk",
  authDomain: "ootv-9ad58.firebaseapp.com",
