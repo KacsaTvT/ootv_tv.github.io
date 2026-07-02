@@ -31,8 +31,8 @@ overflow: hidden; }
  <h2>Élő üzenőfal <span style="color:#f43f5e;">●</span></h2>
  <div id="wallboard"></div>
  <script type="module">
- import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebaseapp.js";
- import { getFirestore, collection, query, where, orderBy, onSnapshot } from
+ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+ import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; from
 "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
  const firebaseConfig = {
  apiKey: "AIzaSyDS6UEeb9o5XT7hCBOHMw-nADQkQrEXRIk",
