@@ -13,14 +13,12 @@
 
         #wallboard { display: flex; flex-direction: column; gap: 20px; max-height: 85vh; overflow: hidden; }
         
-        /* Normál Üzenet Kártya */
         .message-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 8px solid #38bdf8; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         .sender { font-weight: bold; color: #f43f5e; font-size: 16pt; margin-bottom: 8px; }
         .sender-highlight { color: #38bdf8; } 
         .time { font-size: 11pt; color: #94a3b8; font-weight: normal; float: right; }
         .content { font-size: 22pt; line-height: 1.4; color: #e2e8f0; font-style: italic; }
 
-        /* ÚJ: Ajándék Üzenet Kártya (Arany/Bordó ünnepi stílus) */
         .gift-card { background: linear-gradient(135deg, #d97706 0%, #9a3412 100%); border-left: 8px solid #fef08a; box-shadow: 0 10px 20px rgba(217, 119, 6, 0.4); }
         .gift-card .sender { color: #fef08a; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .gift-card .sender-highlight { color: #ffffff; text-decoration: underline; }
@@ -52,19 +50,28 @@
             const pinnedBanner = document.getElementById('pinned-banner');
             wallboard.innerHTML = "";
             let pinnedData = null;
+            let messagesArray = []; 
             
             snapshot.forEach((doc) => {
                 if(doc.id === "PINNED_MESSAGE") { pinnedData = doc.data(); return; }
 
                 const data = doc.data();
+                data.id = doc.id;
                 
-                // Formázás a Címzett alapján
+                // JAVÍTÁS: Ha a szerveridő még nem jött meg, használjuk az azonnali mostani időt (Date.now())
+                data.sortTime = data.timestamp?.toMillis ? data.timestamp.toMillis() : Date.now();
+                messagesArray.push(data);
+            });
+
+            // Rendezzük csökkenő sorrendbe (a legfrissebb lesz legelöl)
+            messagesArray.sort((a, b) => b.sortTime - a.sortTime);
+
+            messagesArray.forEach((data) => {
                 let senderHTML = data.name;
                 if (data.recipient && data.recipient.trim() !== "") {
                     senderHTML = `${data.name} üzenetet küldött neki: <span class="sender-highlight">${data.recipient}</span>`;
                 }
 
-                // Ha ajándék, kap egy ikont és megkapja az ünnepi CSS osztályt
                 const isGift = data.isGift === true;
                 const cardClass = isGift ? "message-card gift-card" : "message-card";
                 const giftIcon = isGift ? "🎁 " : "";
