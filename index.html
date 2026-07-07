@@ -12,14 +12,20 @@
         .pinned-text { color: #ffffff; font-size: 32pt; font-weight: bold; line-height: 1.3; }
 
         #wallboard { display: flex; flex-direction: column; gap: 20px; max-height: 85vh; overflow: hidden; }
+        
+        /* Normál Üzenet Kártya */
         .message-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-left: 8px solid #38bdf8; padding: 25px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        
-        /* Címzett megjelenítésének formázása */
         .sender { font-weight: bold; color: #f43f5e; font-size: 16pt; margin-bottom: 8px; }
-        .sender-highlight { color: #38bdf8; } /* A címzett neve kékkel lesz kiemelve, hogy jól mutasson */
-        
+        .sender-highlight { color: #38bdf8; } 
         .time { font-size: 11pt; color: #94a3b8; font-weight: normal; float: right; }
         .content { font-size: 22pt; line-height: 1.4; color: #e2e8f0; font-style: italic; }
+
+        /* ÚJ: Ajándék Üzenet Kártya (Arany/Bordó ünnepi stílus) */
+        .gift-card { background: linear-gradient(135deg, #d97706 0%, #9a3412 100%); border-left: 8px solid #fef08a; box-shadow: 0 10px 20px rgba(217, 119, 6, 0.4); }
+        .gift-card .sender { color: #fef08a; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .gift-card .sender-highlight { color: #ffffff; text-decoration: underline; }
+        .gift-card .time { color: #fde68a; }
+        .gift-card .content { color: #fffbeb; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
         
         @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
     </style>
@@ -35,11 +41,7 @@
         import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // IDE MÁSOLD BE A SAJÁT KULCSAIDAT!
-        const firebaseConfig = { 
-            apiKey: "AIzaSyDS6UEeb9o5XT7hCBOHMw-nADQkQrEXRIk", 
-            authDomain: "ootv-9ad58.firebaseapp.com", 
-            projectId: "ootv-9ad58" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyDS6UEeb9o5XT7hCBOHMw-nADQkQrEXRIk", authDomain: "ootv-9ad58.firebaseapp.com", projectId: "ootv-9ad58" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -49,26 +51,27 @@
             const wallboard = document.getElementById('wallboard');
             const pinnedBanner = document.getElementById('pinned-banner');
             wallboard.innerHTML = "";
-            
             let pinnedData = null;
             
             snapshot.forEach((doc) => {
-                if(doc.id === "PINNED_MESSAGE") {
-                    pinnedData = doc.data();
-                    return; 
-                }
+                if(doc.id === "PINNED_MESSAGE") { pinnedData = doc.data(); return; }
 
                 const data = doc.data();
                 
-                // --- ÚJ: Szöveg formázása a Címzett alapján ---
+                // Formázás a Címzett alapján
                 let senderHTML = data.name;
                 if (data.recipient && data.recipient.trim() !== "") {
                     senderHTML = `${data.name} üzenetet küldött neki: <span class="sender-highlight">${data.recipient}</span>`;
                 }
 
+                // Ha ajándék, kap egy ikont és megkapja az ünnepi CSS osztályt
+                const isGift = data.isGift === true;
+                const cardClass = isGift ? "message-card gift-card" : "message-card";
+                const giftIcon = isGift ? "🎁 " : "";
+
                 wallboard.innerHTML += `
-                    <div class="message-card">
-                        <div class="sender">${senderHTML} <span class="time">${data.date}</span></div>
+                    <div class="${cardClass}">
+                        <div class="sender">${giftIcon}${senderHTML} <span class="time">${data.date}</span></div>
                         <div class="content">"${data.text}"</div>
                     </div>
                 `;
@@ -76,10 +79,7 @@
 
             if (pinnedData) {
                 pinnedBanner.style.display = "block";
-                pinnedBanner.innerHTML = `
-                    <div class="pinned-header">📢 Fontos Közlemény</div>
-                    <div class="pinned-text">${pinnedData.text}</div>
-                `;
+                pinnedBanner.innerHTML = `<div class="pinned-header">📢 Fontos Közlemény</div><div class="pinned-text">${pinnedData.text}</div>`;
             } else {
                 pinnedBanner.style.display = "none";
                 pinnedBanner.innerHTML = "";
